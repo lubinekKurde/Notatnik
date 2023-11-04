@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wyświetlanie i Edytowanie Tekstu na Stronie</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #000033; /* Bardzo ciemny niebieski */
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .input-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+      width: 300px;
+      background-color: rgba(0, 86, 167, 0.5); /* Przezroczysty niebieski */
+      transition: background-color 0.3s;
+    }
+
+    input[type="text"]:hover {
+      background-color: rgba(0, 86, 167, 0.7); /* Efekt podświetlenia na najechanie */
+    }
+
+    input[type="text"],
+    input[type="title"] {
+      color: white;
+    }
+
+    button {
+      background-color: #0056A7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: rgba(0, 86, 167, 0.5); /* Przezroczysty niebieski */
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: rgba(0, 86, 167, 0.7); /* Efekt podświetlenia na najechanie */
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background-color: rgba(0, 86, 167, 0.7);
+      color: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center; /* Wycentrowanie wpisu */
+      transition: background-color 0.3s;
+    }
+
+    li:hover {
+      background-color: rgba(0, 86, 167, 0.9); /* Efekt podświetlenia na najechanie */
+    }
+
+    .title {
+      font-weight: bold;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: #999;
+    }
+
+    select {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      background-color: rgba(0, 86, 167, 0.5); /* Przezroczysty niebieski */
+      transition: background-color 0.3s;
+    }
+
+    select:hover {
+      background-color: rgba(0, 86, 167, 0.7); /* Efekt podświetlenia na najechanie */
+    }
+
+    select option {
+      color: black;
+    }
+
+    .delete-button {
+      background-color: #FF5733;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .edit-button {
+      background-color: #008000;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .edit-mode {
+      background-color: rgba(0, 128, 0, 0.5); /* Przezroczysty zielony */
+    }
+
+    .edit-mode input[type="text"] {
+      background-color: rgba(0, 128, 0, 0.5); /* Przezroczysty zielony */
+    }
+
+    .change-color-button {
+      background-color: #008000;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .save-button {
+      background-color: #0056A7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .folder {
+      background-color: #001F3F; /* Granatowy kolor dla foldera */
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .folder-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .folder-list-item {
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="input-container">
+    <input type="text" id="title-input" placeholder="Tytuł">
+    <input type="text" id="tekst-input" placeholder="Wpisz tekst">
+    <button onclick="wyswietlTekst()">Dodaj Wpis</button>
+  </div>
+  <div class="folder-list">
+    <div class="folder-list-item" onclick="zmienFolder('default-folder')">Domyślny Folder</div>
+    <div class="folder-list-item" onclick="zmienFolder('inny-folder')">Inny Folder</div>
+    <div class="folder-list-item" onclick="utworzFolder()">Utwórz Folder</div>
+  </div>
+  <div class="folder" id="default-folder">
+    <h2>Domyślny Folder</h2>
+    <ul id="wynik-lista"></ul>
+  </div>
+  <div class="folder" id="inny-folder" style="display: none;">
+    <h2>Inny Folder</h2>
+    <ul id="wynik-lista-inny"></ul>
+  </div>
+
+  <script>
+    var aktualnyFolder = "default-folder";
+
+    // Funkcja do zapisywania danych w localStorage
+    function zapiszDoLocalStorage() {
+      var wpisy = document.querySelectorAll(`#${aktualnyFolder} li`);
+      var zapisaneWpisy = [];
+
+      wpisy.forEach(function (wpis) {
+        zapisaneWpisy.push(wpis.innerHTML);
+      });
+
+      localStorage.setItem(`zapisaneWpisy-${aktualnyFolder}`, JSON.stringify(zapisaneWpisy));
+    }
+
+    // Funkcja do wczytywania danych z localStorage
+    function wczytajZLocalStorage() {
+      var zapisaneWpisy = JSON.parse(localStorage.getItem(`zapisaneWpisy-${aktualnyFolder}`));
+      if (zapisaneWpisy) {
+        var lista = document.getElementById(aktualnyFolder);
+        zapisaneWpisy.forEach(function (wpisHTML) {
+          var nowyElement = document.createElement("li");
+          nowyElement.innerHTML = wpisHTML;
+          lista.appendChild(nowyElement);
+          dodajPrzyciskUsuńEdytuj(nowyElement);
+          dodajPrzyciskZmienKolor(nowyElement);
+        });
+      }
+    }
+
+    function zmienFolder(folder) {
+      var currentFolder = document.getElementById(aktualnyFolder);
+      var newFolder = document.getElementById(folder);
+
+      currentFolder.style.display = "none";
+      newFolder.style.display = "block";
+      aktualnyFolder = folder;
+      wczytajZLocalStorage();
+    }
+
+    function utworzFolder() {
+      var folderName = prompt("Podaj nazwę nowego folderu:");
+      if (folderName) {
+        var newFolder = document.createElement("div");
+        newFolder.className = "folder";
+        newFolder.id = folderName;
+        newFolder.style.display = "none";
+        newFolder.innerHTML = `<h2>${folderName}</h2><ul id="wynik-lista-${folderName}"></ul>`;
+        
+        var folderListItem = document.createElement("div");
+        folderListItem.className = "folder-list-item";
+        folderListItem.textContent = folderName;
+        folderListItem.onclick = function () {
+          zmienFolder(folderName);
+        };
+
+        document.body.appendChild(newFolder);
+        document.querySelector(".folder-list").insertBefore(folderListItem, document.querySelector(".folder-list-item:last-child"));
+      }
+    }
+
+    function dodajPrzyciskUsuńEdytuj(wpis) {
+      if (!wpis.querySelector(".delete-button")) {
+        var deleteButton = document.createElement("span");
+        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteButton.classList.add("delete-button");
+        deleteButton.addEventListener("click", function () {
+          wpis.remove();
+          zapiszDoLocalStorage();
+        });
+
+        var editButton = document.createElement("span");
+        editButton.innerHTML = '<i class="fas fa-edit"></i>';
+        editButton.classList.add("edit-button");
+        editButton.addEventListener("click", function () {
+          wpis.classList.toggle("edit-mode");
+        });
+
+        wpis.appendChild(deleteButton);
+        wpis.appendChild(editButton);
+      }
+    }
+
+    function dodajPrzyciskZmienKolor(wpis) {
+      if (!wpis.querySelector(".change-color-button")) {
+        var changeColorButton = document.createElement("span");
+        changeColorButton.textContent = "Zmień kolor";
+        changeColorButton.classList.add("change-color-button");
+        var originalColor = wpis.style.backgroundColor;
+
+        changeColorButton.addEventListener("click", function () {
+          if (wpis.style.backgroundColor !== originalColor) {
+            wpis.style.backgroundColor = originalColor; // Przywracanie pierwotnego koloru
+          } else {
+            wpis.style.backgroundColor = "#008000"; // Zielony kolor tła
+          }
+        });
+
+        wpis.appendChild(changeColorButton);
+      }
+    }
+
+    function wyswietlTekst() {
+      var title = document.getElementById("title-input").value;
+      var tekst = document.getElementById("tekst-input").value;
+      if (title.trim() === "" || tekst.trim() === "") {
+        alert("Pole tytułu i tekstowe nie mogą być puste!");
+        return;
+      }
+
+      var nowyElement = document.createElement("li");
+      
+      var titleElement = document.createElement("div");
+      titleElement.textContent = title;
+      titleElement.classList.add("title");
+      nowyElement.appendChild(titleElement);
+
+      nowyElement.appendChild(document.createTextNode(tekst));
+
+      var timestamp = document.createElement("span");
+      var now = new Date();
+      var dataGodzina = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+      timestamp.textContent = dataGodzina;
+      timestamp.classList.add("timestamp");
+
+      nowyElement.appendChild(timestamp);
+
+      var lista = document.getElementById(`wynik-lista-${aktualnyFolder}`);
+      lista.appendChild(nowyElement);
+      dodajPrzyciskUsuńEdytuj(nowyElement);
+      dodajPrzyciskZmienKolor(nowyElement);
+
+      document.getElementById("title-input").value = "";
+      document.getElementById("tekst-input").value = "";
+
+      // Po dodaniu wpisu, zapisz go w localStorage
+      zapiszDoLocalStorage();
+    }
+
+    function zapiszEdytowanyTekst(wpis) {
+      var title = wpis.querySelector(".title");
+      var tekst = wpis.querySelector("li:not(.title)");
+
+      var nowyTytul = wpis.querySelector(".edit-title-input").value;
+      var nowyTekst = wpis.querySelector(".edit-tekst-input").value;
+
+      if (nowyTytul.trim() === "" || nowyTekst.trim() === "") {
+        alert("Pole tytułu i tekstowe nie mogą być puste!");
+        return;
+      }
+
+      title.textContent = nowyTytul;
+      tekst.textContent = nowyTekst;
+      wpis.classList.remove("edit-mode");
+      zapiszDoLocalStorage();
+    }
+
+    // Wczytaj zapisane wpisy z localStorage po załadowaniu strony
+    wczytajZLocalStorage();
+  </script>
+</body>
+</html>
